@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "questviewer",
+    "name": "QuestViewer",
+    "description": "View Hypixel quests in game.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["Skorlex"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
