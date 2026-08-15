@@ -1,5 +1,6 @@
 [
   {
+<<<<<<< HEAD
     "modid": "questviewer",
     "name": "QuestViewer",
     "description": "View Hypixel quests in game.",
@@ -8,6 +9,18 @@
     "url": "",
     "updateUrl": "",
     "authorList": ["Skorlex"],
+=======
+    "modid": "${modid}",
+    "name": "Xample Mod",
+    "description": "A mod that is used as an example.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://github.com/romangraef/Forge1.8.9Template/",
+    "updateUrl": "",
+    "authorList": [
+      "You"
+    ],
+>>>>>>> 321531e4b31703f1cfd73f041d89f4e4457e1c6e
     "credits": "",
     "logoFile": "",
     "screenshots": [],

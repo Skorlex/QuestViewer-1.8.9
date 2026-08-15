@@ -23,4 +23,8 @@ plugins {
 }
 
 
+<<<<<<< HEAD
 rootProject.name = "examplemod"
+=======
+rootProject.name = "QuestViewer-1.8.9"
+>>>>>>> 321531e4b31703f1cfd73f041d89f4e4457e1c6e
