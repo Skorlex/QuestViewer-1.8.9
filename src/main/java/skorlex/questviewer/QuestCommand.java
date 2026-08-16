@@ -56,7 +56,7 @@ public class QuestCommand extends CommandBase {
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "daily", "weekly", "leaderboard", "stats", "summary", "sum", "site", "games", "legacy", "help");
+            return getListOfStringsMatchingLastWord(args, "daily", "weekly", "leaderboard", "stats", "summary", "sum", "site", "games", "legacy", "notification", "help");
         }
         return null;
     }
@@ -109,6 +109,12 @@ public class QuestCommand extends CommandBase {
                 case "s":
                     printSite(client, selfName);
                     break;
+                case "notification":
+                case "notifications":
+                case "notify":
+                case "n":
+                    toggleNotifications(client);
+                    break;
                 case "summer_albert":
                 case "bert":
                     printAlbert(client);
@@ -119,6 +125,15 @@ public class QuestCommand extends CommandBase {
             }
         } else if (args.length == 2) {
             switch (args[0].toLowerCase()) {
+                case "notification":
+                case "n":
+                    if (args[1].equalsIgnoreCase("pitch") || args[1].equalsIgnoreCase("p")) {
+                        client.thePlayer.addChatMessage(new ChatComponentText("§eCurrent notification pitch: §b" + QuestViewerConfig.getInstance().soundPitch + " §7(Default: 1.2)"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§7Use §e/q n p [0.5 - 2.0] §7to change it."));
+                    } else {
+                        client.thePlayer.addChatMessage(new ChatComponentText("§cUnknown sub-command. Try §e/q n p"));
+                    }
+                    break;
                 case "lb":
                 case "leaderboard":
                     int page = 1;
@@ -166,6 +181,24 @@ public class QuestCommand extends CommandBase {
             }
         } else if (args.length == 3) {
             switch (args[0].toLowerCase()) {
+                case "notification":
+                case "n":
+                    if (args[1].equalsIgnoreCase("pitch") || args[1].equalsIgnoreCase("p")) {
+                        try {
+                            float pitch = Float.parseFloat(args[2].replace(',', '.'));
+                            if (pitch < 0.5f || pitch > 2.0f) {
+                                client.thePlayer.addChatMessage(new ChatComponentText("§cPitch must be between 0.5 and 2.0!"));
+                            } else {
+                                QuestViewerConfig.getInstance().soundPitch = pitch;
+                                QuestViewerConfig.save();
+                                client.thePlayer.addChatMessage(new ChatComponentText("§a[QuestViewer] Notification pitch set to " + pitch));
+                                playTestSound(client);
+                            }
+                        } catch (NumberFormatException e) {
+                            client.thePlayer.addChatMessage(new ChatComponentText("§cInvalid pitch! Please use a number."));
+                        }
+                    }
+                    break;
                 case "weekly":
                 case "w":
                     fetchData(client, args[2], args[1], true);
@@ -178,6 +211,26 @@ public class QuestCommand extends CommandBase {
         } else {
             client.thePlayer.addChatMessage(new ChatComponentText("§cCould not process command"));
             client.thePlayer.addChatMessage(new ChatComponentText("§cType '/q help' for a list of commands"));
+        }
+    }
+
+    private void toggleNotifications(Minecraft client) {
+        QuestViewerConfig config = QuestViewerConfig.getInstance();
+        config.notificationsEnabled = !config.notificationsEnabled;
+        QuestViewerConfig.save();
+
+        if (config.notificationsEnabled) {
+            client.thePlayer.addChatMessage(new ChatComponentText("§a[QuestViewer] Quest completion notifications enabled!"));
+            playTestSound(client);
+        } else {
+            client.thePlayer.addChatMessage(new ChatComponentText("§c[QuestViewer] Quest completion notifications disabled."));
+        }
+    }
+
+    public static void playTestSound(Minecraft client) {
+        if (client.thePlayer != null) {
+            float pitch = QuestViewerConfig.getInstance().soundPitch;
+            client.thePlayer.playSound("questviewer:chime", 1.0F, pitch);
         }
     }
 
@@ -219,6 +272,8 @@ public class QuestCommand extends CommandBase {
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q summary §7- View quests completed summary (- /q sum [ign])"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q leaderboard [1-10] §7- View the top 100 quests completed"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q stats §7- View your general Hypixel stats (- /q stats [ign])"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q notification §7- Toggle quest completion sound (- /q n)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n pitch [0.5-2.0] §7- Set sound pitch (- /q n p)"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q site §7- Link to 25Karma quest page (- /q site [ign])"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q games §7- Lists gamemode aliases"));
         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
@@ -560,7 +615,6 @@ public class QuestCommand extends CommandBase {
 
                             String cmdType = weekly ? "w" : "d";
 
-                            // If 'game' is not "current", "legacy", or "classic", it means the proxy resolved a player name from the game parameter!
                             String targetPlayer = (game.equalsIgnoreCase("current") || game.equalsIgnoreCase("legacy") || game.equalsIgnoreCase("classic")) ? ign : game;
 
                             sendClickableGame(client, "Arena Brawl", "/q " + cmdType + " arena " + targetPlayer);
