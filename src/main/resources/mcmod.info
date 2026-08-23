@@ -2,14 +2,14 @@
   {
     "modid": "questviewer",
     "name": "QuestViewer",
-    "description": "View Hypixel quests in game.",
+    "description": "QuestViewer allows you to check your active Hypixel quest progress in-game without interacting with the Quest Master",
     "version": "${version}",
     "mcversion": "${mcversion}",
     "url": "",
     "updateUrl": "",
     "authorList": ["Skorlex"],
     "credits": "",
-    "logoFile": "",
+    "logoFile": "assets/questviewer/logo.png",
     "screenshots": [],
     "dependencies": []
   }

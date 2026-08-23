@@ -72,10 +72,8 @@ public class QuestCommand extends CommandBase {
             printHelp(client);
         } else if (args.length == 1) {
             switch (args[0].toLowerCase()) {
-                case "api":
-                    client.thePlayer.addChatMessage(new ChatComponentText("§cYour API key is no longer needed to use this mod :)"));
-                    break;
                 case "help":
+                case "h":
                     printHelp(client);
                     break;
                 case "games":
@@ -85,9 +83,8 @@ public class QuestCommand extends CommandBase {
                 case "leaderboard":
                     fetchLeaderboard(client, 1);
                     break;
-                case "info":
-                case "i":
                 case "stats":
+                case "s":
                     fetchStats(client, selfName);
                     break;
                 case "sum":
@@ -102,20 +99,17 @@ public class QuestCommand extends CommandBase {
                 case "d":
                     fetchData(client, selfName, "current", false);
                     break;
-                case "legacy":
-                    fetchData(client, selfName, "legacy", false);
-                    break;
                 case "site":
-                case "s":
                     printSite(client, selfName);
                     break;
                 case "notification":
                 case "notifications":
                 case "notify":
                 case "n":
-                    toggleNotifications(client);
+                    client.thePlayer.addChatMessage(new ChatComponentText("§cPlease specify a sound to test: §e/q n daily §cor §e/q n weekly"));
                     break;
                 case "summer_albert":
+                case "albert":
                 case "bert":
                     printAlbert(client);
                     break;
@@ -126,6 +120,8 @@ public class QuestCommand extends CommandBase {
         } else if (args.length == 2) {
             switch (args[0].toLowerCase()) {
                 case "notification":
+                case "notifications":
+                case "notify":
                 case "n":
                     if (args[1].equalsIgnoreCase("daily") || args[1].equalsIgnoreCase("d")) {
                         playNotificationSound(client, "chime_daily", QuestViewerConfig.getInstance().dailyPitch);
@@ -153,12 +149,10 @@ public class QuestCommand extends CommandBase {
                     fetchLeaderboard(client, page);
                     break;
                 case "site":
-                case "s":
                     printSite(client, args[1]);
                     break;
-                case "info":
-                case "i":
                 case "stats":
+                case "s":
                     fetchStats(client, args[1]);
                     break;
                 case "sum":
@@ -197,22 +191,8 @@ public class QuestCommand extends CommandBase {
         }
     }
 
-    private void toggleNotifications(Minecraft client) {
-        QuestViewerConfig config = QuestViewerConfig.getInstance();
-        config.notificationsEnabled = !config.notificationsEnabled;
-        QuestViewerConfig.save();
-
-        if (config.notificationsEnabled) {
-            client.thePlayer.addChatMessage(new ChatComponentText("§a[QuestViewer] Quest completion notifications enabled!"));
-            playNotificationSound(client, "chime_daily", config.dailyPitch);
-        } else {
-            client.thePlayer.addChatMessage(new ChatComponentText("§c[QuestViewer] Quest completion notifications disabled."));
-        }
-    }
-
     public static void playNotificationSound(Minecraft client, String soundEvent, float pitch) {
         if (client.thePlayer != null) {
-            // 100.0F volume creates a massive radius, restoring full volume without fading on movement
             client.thePlayer.playSound("questviewer:" + soundEvent, 100.0F, pitch);
         }
     }
@@ -253,9 +233,8 @@ public class QuestCommand extends CommandBase {
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q daily [game] {ign} §7- Your daily quests for specified game"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q weekly [game] {ign} §7- Your weekly quests for specified game"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q summary §7- View quests completed summary (- /q sum [ign])"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q leaderboard [1-10] §7- View the top 100 quests completed"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q stats §7- View your general Hypixel stats (- /q stats [ign])"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q notification §7- Toggle quest completion sound (- /q n)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q leaderboard [1-10] §7- View the top 100 quests completed (- /q lb)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q stats §7- View your general Hypixel stats (- /q s [ign])"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q n daily §7- Test Daily sound (- /q n d)"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q n weekly §7- Test Weekly sound (- /q n w)"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q site §7- Link to 25Karma quest page (- /q site [ign])"));
