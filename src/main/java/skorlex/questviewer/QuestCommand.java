@@ -127,11 +127,12 @@ public class QuestCommand extends CommandBase {
             switch (args[0].toLowerCase()) {
                 case "notification":
                 case "n":
-                    if (args[1].equalsIgnoreCase("pitch") || args[1].equalsIgnoreCase("p")) {
-                        client.thePlayer.addChatMessage(new ChatComponentText("§eCurrent notification pitch: §b" + QuestViewerConfig.getInstance().soundPitch + " §7(Default: 1.2)"));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§7Use §e/q n p [0.5 - 2.0] §7to change it."));
+                    if (args[1].equalsIgnoreCase("daily") || args[1].equalsIgnoreCase("d")) {
+                        playNotificationSound(client, "chime_daily", QuestViewerConfig.getInstance().dailyPitch);
+                    } else if (args[1].equalsIgnoreCase("weekly") || args[1].equalsIgnoreCase("w")) {
+                        playNotificationSound(client, "chime_weekly", QuestViewerConfig.getInstance().weeklyPitch);
                     } else {
-                        client.thePlayer.addChatMessage(new ChatComponentText("§cUnknown sub-command. Try §e/q n p"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§cUnknown sub-command. Try §e/q n daily §cor §e/q n weekly"));
                     }
                     break;
                 case "lb":
@@ -181,24 +182,6 @@ public class QuestCommand extends CommandBase {
             }
         } else if (args.length == 3) {
             switch (args[0].toLowerCase()) {
-                case "notification":
-                case "n":
-                    if (args[1].equalsIgnoreCase("pitch") || args[1].equalsIgnoreCase("p")) {
-                        try {
-                            float pitch = Float.parseFloat(args[2].replace(',', '.'));
-                            if (pitch < 0.5f || pitch > 2.0f) {
-                                client.thePlayer.addChatMessage(new ChatComponentText("§cPitch must be between 0.5 and 2.0!"));
-                            } else {
-                                QuestViewerConfig.getInstance().soundPitch = pitch;
-                                QuestViewerConfig.save();
-                                client.thePlayer.addChatMessage(new ChatComponentText("§a[QuestViewer] Notification pitch set to " + pitch));
-                                playTestSound(client);
-                            }
-                        } catch (NumberFormatException e) {
-                            client.thePlayer.addChatMessage(new ChatComponentText("§cInvalid pitch! Please use a number."));
-                        }
-                    }
-                    break;
                 case "weekly":
                 case "w":
                     fetchData(client, args[2], args[1], true);
@@ -221,16 +204,16 @@ public class QuestCommand extends CommandBase {
 
         if (config.notificationsEnabled) {
             client.thePlayer.addChatMessage(new ChatComponentText("§a[QuestViewer] Quest completion notifications enabled!"));
-            playTestSound(client);
+            playNotificationSound(client, "chime_daily", config.dailyPitch);
         } else {
             client.thePlayer.addChatMessage(new ChatComponentText("§c[QuestViewer] Quest completion notifications disabled."));
         }
     }
 
-    public static void playTestSound(Minecraft client) {
+    public static void playNotificationSound(Minecraft client, String soundEvent, float pitch) {
         if (client.thePlayer != null) {
-            float pitch = QuestViewerConfig.getInstance().soundPitch;
-            client.thePlayer.playSound("questviewer:chime", 1.0F, pitch);
+            // 100.0F volume creates a massive radius, restoring full volume without fading on movement
+            client.thePlayer.playSound("questviewer:" + soundEvent, 100.0F, pitch);
         }
     }
 
@@ -273,7 +256,8 @@ public class QuestCommand extends CommandBase {
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q leaderboard [1-10] §7- View the top 100 quests completed"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q stats §7- View your general Hypixel stats (- /q stats [ign])"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q notification §7- Toggle quest completion sound (- /q n)"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n pitch [0.5-2.0] §7- Set sound pitch (- /q n p)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n daily §7- Test Daily sound (- /q n d)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n weekly §7- Test Weekly sound (- /q n w)"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q site §7- Link to 25Karma quest page (- /q site [ign])"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q games §7- Lists gamemode aliases"));
         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));

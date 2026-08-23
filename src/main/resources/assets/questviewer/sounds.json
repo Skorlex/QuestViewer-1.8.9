@@ -1,0 +1,14 @@
+{
+  "chime_daily": {
+    "category": "player",
+    "sounds": [
+      "questviewer:chime_daily"
+    ]
+  },
+  "chime_weekly": {
+    "category": "player",
+    "sounds": [
+      "questviewer:chime_weekly"
+    ]
+  }
+}

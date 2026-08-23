@@ -13,6 +13,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import org.lwjgl.input.Keyboard;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Mod(modid = QuestViewer.MOD_ID, version = QuestViewer.VERSION)
 public class QuestViewer {
 
@@ -21,9 +24,11 @@ public class QuestViewer {
 
     public static KeyBinding checkQuestsKey;
 
+    // Retaining our 1.8.9 Forge specific regex format
+    private static final Pattern QUEST_COMPLETED_PATTERN = Pattern.compile("(?s).*§r§a(Daily|Weekly|Monthly) Quest: .*? Completed!§r.*");
+
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        // Grab the Forge config directory (usually .minecraft/config) and initialize our file
         QuestViewerConfig.init(event.getModConfigurationDirectory());
     }
 
@@ -34,7 +39,9 @@ public class QuestViewer {
 
         ClientCommandHandler.instance.registerCommand(new QuestCommand());
 
-        // Register this class to the main Forge Event Bus to receive chat events
+        // Initialize the sequential audio queue system
+        SoundQueueManager.register();
+
         MinecraftForge.EVENT_BUS.register(this);
     }
 
@@ -50,16 +57,19 @@ public class QuestViewer {
 
     @SubscribeEvent
     public void onChatReceived(ClientChatReceivedEvent event) {
-        // Ignore the event if notifications are disabled, or if it is an action bar overlay (type 2)
         if (!QuestViewerConfig.getInstance().notificationsEnabled || event.type == 2) return;
 
-        // Grab the exact formatted text (including color codes) to prevent spoofing or false positives
         String text = event.message.getFormattedText().trim();
+        Matcher matcher = QUEST_COMPLETED_PATTERN.matcher(text);
 
-        // (?s) enables DOTALL so it matches across the multi-line reward text
-        if (text.matches("(?s).*§r§a(Daily|Weekly|Monthly) Quest: .*? Completed!§r.*")) {
-            Minecraft client = Minecraft.getMinecraft();
-            QuestCommand.playTestSound(client);
+        if (matcher.matches()) {
+            String questType = matcher.group(1);
+
+            if (questType.equals("Daily")) {
+                SoundQueueManager.enqueueSound(SoundQueueManager.SoundType.DAILY);
+            } else {
+                SoundQueueManager.enqueueSound(SoundQueueManager.SoundType.WEEKLY);
+            }
         }
     }
 }
