@@ -13,10 +13,11 @@ public class QuestViewerConfig {
     private static File configFile;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    // The newly decoupled config variables
     public boolean notificationsEnabled = true;
     public float dailyPitch = 1.2F;
     public float weeklyPitch = 1.2F;
+    // New variable to track first-time users
+    public boolean firstTimeUser = true;
 
     private static QuestViewerConfig instance;
 

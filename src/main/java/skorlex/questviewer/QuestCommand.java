@@ -299,7 +299,7 @@ public class QuestCommand extends CommandBase {
     }
 
     private static void fetchGames(Minecraft client) {
-        getAsync("https://questviewer-proxy.alexiscanovi78.workers.dev/api/misc/gameAliases/", response -> {
+        getAsync("https://questviewer-proxy.skorlex.workers.dev/api/misc/gameAliases/", response -> {
             client.addScheduledTask(() -> {
                 if (client.thePlayer == null) return;
                 try {
@@ -452,7 +452,7 @@ public class QuestCommand extends CommandBase {
     }
 
     private static void fetchStats(Minecraft client, String name) {
-        getAsync("https://questviewer-proxy.alexiscanovi78.workers.dev/api/stats/" + name, response -> {
+        getAsync("https://questviewer-proxy.skorlex.workers.dev/api/stats/" + name, response -> {
             client.addScheduledTask(() -> {
                 if (client.thePlayer == null) return;
                 try {
@@ -498,7 +498,7 @@ public class QuestCommand extends CommandBase {
     }
 
     private static void fetchSummary(Minecraft client, String ign) {
-        getAsync("https://questviewer-proxy.alexiscanovi78.workers.dev/api/quests/summary/" + ign, response -> {
+        getAsync("https://questviewer-proxy.skorlex.workers.dev/api/quests/summary/" + ign, response -> {
             client.addScheduledTask(() -> {
                 if (client.thePlayer == null) return;
                 try {
@@ -551,7 +551,7 @@ public class QuestCommand extends CommandBase {
     }
 
     public static void fetchData(Minecraft client, String ign, String game, boolean weekly) {
-        String url = "https://questviewer-proxy.alexiscanovi78.workers.dev/api/quests/player_simple/" + ign + "?type=" + (weekly ? "weekly" : "daily") + "&game=" + game;
+        String url = "https://questviewer-proxy.skorlex.workers.dev/api/quests/player_simple/" + ign + "?type=" + (weekly ? "weekly" : "daily") + "&game=" + game;
         getAsync(url, response -> {
             client.addScheduledTask(() -> {
                 if (client.thePlayer == null) return;

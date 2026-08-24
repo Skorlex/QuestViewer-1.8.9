@@ -2,6 +2,7 @@ package skorlex.questviewer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -11,6 +12,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
 import java.util.regex.Matcher;
@@ -24,7 +26,9 @@ public class QuestViewer {
 
     public static KeyBinding checkQuestsKey;
 
-    // Retaining our 1.8.9 Forge specific regex format
+    // A 3-second (60 tick) delay to ensure the message isn't swallowed by the Hypixel MOTD
+    private int firstTimeDelay = 60;
+
     private static final Pattern QUEST_COMPLETED_PATTERN = Pattern.compile("(?s).*§r§a(Daily|Weekly|Monthly) Quest: .*? Completed!§r.*");
 
     @Mod.EventHandler
@@ -39,7 +43,6 @@ public class QuestViewer {
 
         ClientCommandHandler.instance.registerCommand(new QuestCommand());
 
-        // Initialize the sequential audio queue system
         SoundQueueManager.register();
 
         MinecraftForge.EVENT_BUS.register(this);
@@ -69,6 +72,25 @@ public class QuestViewer {
                 SoundQueueManager.enqueueSound(SoundQueueManager.SoundType.DAILY);
             } else {
                 SoundQueueManager.enqueueSound(SoundQueueManager.SoundType.WEEKLY);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        Minecraft client = Minecraft.getMinecraft();
+        if (client.thePlayer != null && QuestViewerConfig.getInstance().firstTimeUser) {
+            if (firstTimeDelay > 0) {
+                firstTimeDelay--;
+            } else {
+                // Instantly flips the config flag and saves it so the message never displays again
+                QuestViewerConfig.getInstance().firstTimeUser = false;
+                QuestViewerConfig.save();
+
+                // Displays the yellow and bold welcome message
+                client.thePlayer.addChatMessage(new ChatComponentText("§e§lUsing QuestViewer for the first time? Type /q help to view the list of available commands!"));
             }
         }
     }
