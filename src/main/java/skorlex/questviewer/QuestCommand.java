@@ -13,6 +13,7 @@ import net.minecraft.event.HoverEvent;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import org.lwjgl.input.Keyboard;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -77,6 +78,7 @@ public class QuestCommand extends CommandBase {
                     printHelp(client);
                     break;
                 case "games":
+                case "g":
                     fetchGames(client);
                     break;
                 case "lb":
@@ -106,7 +108,7 @@ public class QuestCommand extends CommandBase {
                 case "notifications":
                 case "notify":
                 case "n":
-                    client.thePlayer.addChatMessage(new ChatComponentText("§cPlease specify a sound to test: §e/q n daily §cor §e/q n weekly"));
+                    client.thePlayer.addChatMessage(new ChatComponentText("§cPlease specify a sound to test: §e/q n daily§c, §e/q n weekly§c, or §e/q n toggle"));
                     break;
                 case "summer_albert":
                 case "albert":
@@ -127,8 +129,19 @@ public class QuestCommand extends CommandBase {
                         playNotificationSound(client, "chime_daily", QuestViewerConfig.getInstance().dailyPitch);
                     } else if (args[1].equalsIgnoreCase("weekly") || args[1].equalsIgnoreCase("w")) {
                         playNotificationSound(client, "chime_weekly", QuestViewerConfig.getInstance().weeklyPitch);
+                    } else if (args[1].equalsIgnoreCase("toggle") || args[1].equalsIgnoreCase("t")) {
+                        QuestViewerConfig config = QuestViewerConfig.getInstance();
+                        config.notificationsEnabled = !config.notificationsEnabled;
+                        QuestViewerConfig.save();
+
+                        String status = config.notificationsEnabled ? "§aON" : "§cOFF";
+                        client.thePlayer.addChatMessage(new ChatComponentText("§eQuest notifications are now " + status));
+
+                        if (config.notificationsEnabled) {
+                            playNotificationSound(client, "chime_daily", config.dailyPitch);
+                        }
                     } else {
-                        client.thePlayer.addChatMessage(new ChatComponentText("§cUnknown sub-command. Try §e/q n daily §cor §e/q n weekly"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§cUnknown sub-command. Try §e/q n daily§c, §e/q n weekly§c, or §e/q n toggle"));
                     }
                     break;
                 case "lb":
@@ -228,17 +241,24 @@ public class QuestCommand extends CommandBase {
         client.thePlayer.addChatMessage(new ChatComponentText("§lHelp and Commands"));
         client.thePlayer.addChatMessage(new ChatComponentText(""));
         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q daily §7- Your daily quests for game you are playing"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q weekly §7- Your weekly quests for game you are playing"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q daily §7- Your daily quests for game you are playing §b(/q d)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q weekly §7- Your weekly quests for game you are playing §b(/q w)"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q daily [game] {ign} §7- Your daily quests for specified game"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q weekly [game] {ign} §7- Your weekly quests for specified game"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q summary §7- View quests completed summary (- /q sum [ign])"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q leaderboard [1-10] §7- View the top 100 quests completed (- /q lb)"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q stats §7- View your general Hypixel stats (- /q s [ign])"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n daily §7- Test Daily sound (- /q n d)"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n weekly §7- Test Weekly sound (- /q n w)"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q site §7- Link to 25Karma quest page (- /q site [ign])"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q games §7- Lists gamemode aliases"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q summary §7- View quests completed summary §b(/q sum [ign])"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q leaderboard [1-10] §7- View the top 100 quests completed §b(/q lb [page])"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q stats §7- View your general Hypixel stats §b(/q s [ign])"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n daily §7- Test Daily sound §b(/q n d)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n weekly §7- Test Weekly sound §b(/q n w)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n toggle §7- Toggle notification sounds ON/OFF §b(/q n t)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q site §7- Link to 25Karma quest page §b(/q site [ign])"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q games §7- Lists gamemode aliases §b(/q g)"));
+        client.thePlayer.addChatMessage(new ChatComponentText(""));
+
+        // Dynamically fetches the current keybind assignment and displays it
+        String keyName = Keyboard.getKeyName(QuestViewer.checkQuestsKey.getKeyCode());
+        client.thePlayer.addChatMessage(new ChatComponentText("§e§lTip: §7Press §b" + keyName + " §7(configurable in controls) to view current daily quests!"));
+
         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
     }
 

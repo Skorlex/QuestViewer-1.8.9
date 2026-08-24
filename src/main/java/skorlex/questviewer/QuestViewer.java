@@ -26,7 +26,6 @@ public class QuestViewer {
 
     public static KeyBinding checkQuestsKey;
 
-    // A 3-second (60 tick) delay to ensure the message isn't swallowed by the Hypixel MOTD
     private int firstTimeDelay = 60;
 
     private static final Pattern QUEST_COMPLETED_PATTERN = Pattern.compile("(?s).*§r§a(Daily|Weekly|Monthly) Quest: .*? Completed!§r.*");
@@ -85,12 +84,11 @@ public class QuestViewer {
             if (firstTimeDelay > 0) {
                 firstTimeDelay--;
             } else {
-                // Instantly flips the config flag and saves it so the message never displays again
                 QuestViewerConfig.getInstance().firstTimeUser = false;
                 QuestViewerConfig.save();
 
-                // Displays the yellow and bold welcome message
-                client.thePlayer.addChatMessage(new ChatComponentText("§e§lUsing QuestViewer for the first time? Type /q help to view the list of available commands!"));
+                // QuestViewer is now orange (§6), while the rest remains yellow (§e)
+                client.thePlayer.addChatMessage(new ChatComponentText("§e§lUsing §6§lQuestViewer§e§l for the first time? Type §6§l/q help§e§l to view the list of available commands!"));
             }
         }
     }
