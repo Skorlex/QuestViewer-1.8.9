@@ -21,6 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -57,7 +58,7 @@ public class QuestCommand extends CommandBase {
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "daily", "weekly", "leaderboard", "stats", "summary", "sum", "site", "games", "legacy", "notification", "help");
+            return getListOfStringsMatchingLastWord(args, "daily", "weekly", "monthly", "leaderboard", "stats", "summary", "sum", "site", "games", "legacy", "notification", "help");
         }
         return null;
     }
@@ -93,13 +94,17 @@ public class QuestCommand extends CommandBase {
                 case "summary":
                     fetchSummary(client, selfName);
                     break;
+                case "monthly":
+                case "m":
+                    fetchData(client, selfName, "current", "monthly");
+                    break;
                 case "weekly":
                 case "w":
-                    fetchData(client, selfName, "current", true);
+                    fetchData(client, selfName, "current", "weekly");
                     break;
                 case "daily":
                 case "d":
-                    fetchData(client, selfName, "current", false);
+                    fetchData(client, selfName, "current", "daily");
                     break;
                 case "site":
                     printSite(client, selfName);
@@ -108,7 +113,7 @@ public class QuestCommand extends CommandBase {
                 case "notifications":
                 case "notify":
                 case "n":
-                    client.thePlayer.addChatMessage(new ChatComponentText("§cPlease specify a sound to test: §e/q n daily§c, §e/q n weekly§c, or §e/q n toggle"));
+                    client.thePlayer.addChatMessage(new ChatComponentText("§cPlease specify a sound/toggle: §e/q n toggle §c, §e/q n daily/weekly/monthly"));
                     break;
                 case "summer_albert":
                 case "albert":
@@ -127,7 +132,7 @@ public class QuestCommand extends CommandBase {
                 case "n":
                     if (args[1].equalsIgnoreCase("daily") || args[1].equalsIgnoreCase("d")) {
                         playNotificationSound(client, "chime_daily", QuestViewerConfig.getInstance().dailyPitch);
-                    } else if (args[1].equalsIgnoreCase("weekly") || args[1].equalsIgnoreCase("w")) {
+                    } else if (args[1].equalsIgnoreCase("weekly") || args[1].equalsIgnoreCase("w") || args[1].equalsIgnoreCase("monthly") || args[1].equalsIgnoreCase("m")) {
                         playNotificationSound(client, "chime_weekly", QuestViewerConfig.getInstance().weeklyPitch);
                     } else if (args[1].equalsIgnoreCase("toggle") || args[1].equalsIgnoreCase("t")) {
                         QuestViewerConfig config = QuestViewerConfig.getInstance();
@@ -141,7 +146,7 @@ public class QuestCommand extends CommandBase {
                             playNotificationSound(client, "chime_daily", config.dailyPitch);
                         }
                     } else {
-                        client.thePlayer.addChatMessage(new ChatComponentText("§cUnknown sub-command. Try §e/q n daily§c, §e/q n weekly§c, or §e/q n toggle"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§cUnknown sub-command. Try §e/q n toggle §c, §e/q n daily/weekly/monthly"));
                     }
                     break;
                 case "lb":
@@ -172,16 +177,20 @@ public class QuestCommand extends CommandBase {
                 case "summary":
                     fetchSummary(client, args[1]);
                     break;
+                case "monthly":
+                case "m":
+                    fetchData(client, selfName, args[1], "monthly");
+                    break;
                 case "weekly":
                 case "w":
-                    fetchData(client, selfName, args[1], true);
+                    fetchData(client, selfName, args[1], "weekly");
                     break;
                 case "daily":
                 case "d":
-                    fetchData(client, selfName, args[1], false);
+                    fetchData(client, selfName, args[1], "daily");
                     break;
                 case "legacy":
-                    fetchData(client, args[1], "legacy", false);
+                    fetchData(client, args[1], "legacy", "daily");
                     break;
                 default:
                     client.thePlayer.addChatMessage(new ChatComponentText("§cCould not register argument: " + args[0]));
@@ -189,13 +198,17 @@ public class QuestCommand extends CommandBase {
             }
         } else if (args.length == 3) {
             switch (args[0].toLowerCase()) {
+                case "monthly":
+                case "m":
+                    fetchData(client, args[2], args[1], "monthly");
+                    break;
                 case "weekly":
                 case "w":
-                    fetchData(client, args[2], args[1], true);
+                    fetchData(client, args[2], args[1], "weekly");
                     break;
                 case "daily":
                 case "d":
-                    fetchData(client, args[2], args[1], false);
+                    fetchData(client, args[2], args[1], "daily");
                     break;
             }
         } else {
@@ -235,30 +248,25 @@ public class QuestCommand extends CommandBase {
     }
 
     private static void printHelp(Minecraft client) {
-        client.thePlayer.addChatMessage(new ChatComponentText(""));
-        client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
-        client.thePlayer.addChatMessage(new ChatComponentText(""));
-        client.thePlayer.addChatMessage(new ChatComponentText("§lHelp and Commands"));
-        client.thePlayer.addChatMessage(new ChatComponentText(""));
+        client.thePlayer.addChatMessage(new ChatComponentText("\n§m----------------------------------------\n"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§lHelp and Commands\n"));
         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q daily §7- Your daily quests for game you are playing §b(/q d)"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q weekly §7- Your weekly quests for game you are playing §b(/q w)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q monthly §7- Your monthly quests for game you are playing §b(/q m)"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q daily [game] {ign} §7- Your daily quests for specified game"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q weekly [game] {ign} §7- Your weekly quests for specified game"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q summary §7- View quests completed summary §b(/q sum [ign])"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q leaderboard [1-10] §7- View the top 100 quests completed §b(/q lb [page])"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q stats §7- View your general Hypixel stats §b(/q s [ign])"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n daily §7- Test Daily sound §b(/q n d)"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n weekly §7- Test Weekly sound §b(/q n w)"));
-        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n toggle §7- Toggle notification sounds ON/OFF §b(/q n t)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n toggle §7- Turn ON/OFF quest notification sounds §b(/q n t)"));
+        client.thePlayer.addChatMessage(new ChatComponentText("§e/q n daily/weekly/monthly §7- Test quest notification sounds §b(/q n d/w/m)"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q site §7- Link to 25Karma quest page §b(/q site [ign])"));
         client.thePlayer.addChatMessage(new ChatComponentText("§e/q games §7- Lists gamemode aliases §b(/q g)"));
-        client.thePlayer.addChatMessage(new ChatComponentText(""));
 
-        // Dynamically fetches the current keybind assignment and displays it
-        String keyName = Keyboard.getKeyName(QuestViewer.checkQuestsKey.getKeyCode());
-        client.thePlayer.addChatMessage(new ChatComponentText("§e§lTip: §7Press §b" + keyName + " §7(configurable in controls) to view current daily quests!"));
-
+        String dKey = Keyboard.getKeyName(QuestViewer.checkQuestsKey.getKeyCode()).toUpperCase();
+        String wKey = Keyboard.getKeyName(QuestViewer.checkWeeklyQuestsKey.getKeyCode()).toUpperCase();
+        client.thePlayer.addChatMessage(new ChatComponentText("\n§e§lTip: §7Press §b" + dKey + " §7(configurable) to view daily and §b" + wKey + " §7to view weekly quests!"));
         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
     }
 
@@ -281,11 +289,9 @@ public class QuestCommand extends CommandBase {
                         ChatComponentText message = new ChatComponentText("Go to ");
                         message.appendSibling(linkComponent);
 
-                        client.thePlayer.addChatMessage(new ChatComponentText("§m-------------------"));
-                        client.thePlayer.addChatMessage(new ChatComponentText(""));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§m-------------------\n"));
                         client.thePlayer.addChatMessage(message);
-                        client.thePlayer.addChatMessage(new ChatComponentText(""));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§m-------------------"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("\n§m-------------------"));
                     } else {
                         client.thePlayer.addChatMessage(new ChatComponentText("§cError: Could not find player UUID."));
                     }
@@ -311,11 +317,9 @@ public class QuestCommand extends CommandBase {
         ChatComponentText message = new ChatComponentText("Go to ");
         message.appendSibling(linkComponent);
 
-        client.thePlayer.addChatMessage(new ChatComponentText("§m-------------------"));
-        client.thePlayer.addChatMessage(new ChatComponentText(""));
+        client.thePlayer.addChatMessage(new ChatComponentText("§m-------------------\n"));
         client.thePlayer.addChatMessage(message);
-        client.thePlayer.addChatMessage(new ChatComponentText(""));
-        client.thePlayer.addChatMessage(new ChatComponentText("§m-------------------"));
+        client.thePlayer.addChatMessage(new ChatComponentText("\n§m-------------------"));
     }
 
     private static void fetchGames(Minecraft client) {
@@ -325,10 +329,8 @@ public class QuestCommand extends CommandBase {
                 try {
                     JsonObject data = new JsonParser().parse(response).getAsJsonObject();
                     if (data.has("success") && data.get("success").getAsBoolean()) {
-                        client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
-                        client.thePlayer.addChatMessage(new ChatComponentText(""));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§lGame Aliases"));
-                        client.thePlayer.addChatMessage(new ChatComponentText(""));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------\n"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§lGame Aliases\n"));
                         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
                         JsonArray array = data.get("data").getAsJsonArray();
                         for (JsonElement game : array) {
@@ -368,8 +370,7 @@ public class QuestCommand extends CommandBase {
                     JsonObject root = new JsonParser().parse(response).getAsJsonObject();
                     String html = root.get("result").getAsString();
 
-                    client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
-                    client.thePlayer.addChatMessage(new ChatComponentText(""));
+                    client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------\n"));
 
                     ChatComponentText header = new ChatComponentText("");
 
@@ -390,8 +391,7 @@ public class QuestCommand extends CommandBase {
                     }
 
                     client.thePlayer.addChatMessage(header);
-                    client.thePlayer.addChatMessage(new ChatComponentText(""));
-                    client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
+                    client.thePlayer.addChatMessage(new ChatComponentText("\n§m----------------------------------------"));
 
                     Pattern rowPattern = Pattern.compile("(?s)<tr>\\s*<td>(\\d+)</td>\\s*<td>(.*?)</td>\\s*<td>([\\d,]+)</td>");
                     Matcher matcher = rowPattern.matcher(html);
@@ -489,16 +489,16 @@ public class QuestCommand extends CommandBase {
 
                         String grammarSuffix = rankFormatted.toLowerCase().endsWith("s") ? "'" : "'s";
 
+                        client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------\n"));
+                        client.thePlayer.addChatMessage(new ChatComponentText(rankFormatted + grammarSuffix + " §f§lGeneral Stats\n"));
                         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
-                        client.thePlayer.addChatMessage(new ChatComponentText(""));
-                        client.thePlayer.addChatMessage(new ChatComponentText(rankFormatted + grammarSuffix + " §f§lGeneral Stats"));
-                        client.thePlayer.addChatMessage(new ChatComponentText(""));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§7Network Level: §3" + String.format("%.2f", level)));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§7Achievement Points: §e" + String.format("%,d", ap)));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§7Quests Completed: §b" + String.format("%,d", quests)));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§7Challenges Completed: §b" + String.format("%,d", challenges)));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§7Karma: §d" + String.format("%,d", karma)));
+
+                        client.thePlayer.addChatMessage(new ChatComponentText("§7Network Level: §3" + String.format(Locale.US, "%.2f", level)));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§7Achievement Points: §e" + String.format(Locale.US, "%,d", ap)));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§7Quests Completed: §b" + String.format(Locale.US, "%,d", quests)));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§7Challenges Completed: §b" + String.format(Locale.US, "%,d", challenges)));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§7Karma: §d" + String.format(Locale.US, "%,d", karma)));
+
                         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
 
                     } else if (data.has("cause")) {
@@ -539,19 +539,16 @@ public class QuestCommand extends CommandBase {
 
                         String summarySuffix = rankFormatted.toLowerCase().endsWith("s") ? "'" : "'s";
 
-                        client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
-                        client.thePlayer.addChatMessage(new ChatComponentText(""));
-                        client.thePlayer.addChatMessage(new ChatComponentText(rankFormatted + summarySuffix + " §f§lQuest Summary"));
-                        client.thePlayer.addChatMessage(new ChatComponentText(""));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------\n"));
+                        client.thePlayer.addChatMessage(new ChatComponentText(rankFormatted + summarySuffix + " §f§lQuest Summary\n"));
                         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
                         client.thePlayer.addChatMessage(new ChatComponentText("§6§lCurrent Cycle:"));
                         client.thePlayer.addChatMessage(new ChatComponentText("§7Dailies Today: §a" + dailiesToday + " / " + totalDailies + " §7Completed"));
                         client.thePlayer.addChatMessage(new ChatComponentText("§7Weeklies This Week: §a" + weekliesThisWeek + " / " + totalWeeklies + " §7Completed"));
-                        client.thePlayer.addChatMessage(new ChatComponentText(""));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§6§lTotal Completed:"));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§7This Week: §b" + String.format("%,d", completedThisWeek) + " §7Quests"));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§7This Month: §b" + String.format("%,d", completedThisMonth) + " §7Quests"));
-                        client.thePlayer.addChatMessage(new ChatComponentText("§7This Year: §b" + String.format("%,d", completedThisYear) + " §7Quests"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("\n§6§lTotal Completed:"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§7This Week: §b" + String.format(Locale.US, "%,d", completedThisWeek) + " §7Quests"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§7This Month: §b" + String.format(Locale.US, "%,d", completedThisMonth) + " §7Quests"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§7This Year: §b" + String.format(Locale.US, "%,d", completedThisYear) + " §7Quests"));
                         client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
 
                     } else if (data.has("cause")) {
@@ -570,8 +567,8 @@ public class QuestCommand extends CommandBase {
         });
     }
 
-    public static void fetchData(Minecraft client, String ign, String game, boolean weekly) {
-        String url = "https://questviewer-proxy.skorlex.workers.dev/api/quests/player_simple/" + ign + "?type=" + (weekly ? "weekly" : "daily") + "&game=" + game;
+    public static void fetchData(Minecraft client, String ign, String game, String type) {
+        String url = "https://questviewer-proxy.skorlex.workers.dev/api/quests/player_simple/" + ign + "?type=" + type + "&game=" + game;
         getAsync(url, response -> {
             client.addScheduledTask(() -> {
                 if (client.thePlayer == null) return;
@@ -579,7 +576,7 @@ public class QuestCommand extends CommandBase {
                     JsonObject data = new JsonParser().parse(response).getAsJsonObject();
                     if (data.has("success") && data.get("success").getAsBoolean()) {
                         JsonObject questsRoot = data.get("data").getAsJsonObject().get("quests").getAsJsonObject();
-                        JsonObject typeObject = questsRoot.get(weekly ? "weekly" : "daily").getAsJsonObject();
+                        JsonObject typeObject = questsRoot.get(type).getAsJsonObject();
 
                         if (typeObject.entrySet().isEmpty()) {
                             client.thePlayer.addChatMessage(new ChatComponentText("§c[QuestViewer] No quests found for game: " + game));
@@ -591,12 +588,22 @@ public class QuestCommand extends CommandBase {
                         String gameName = questObject.get("name").getAsString();
                         JsonArray questList = questObject.get("quests").getAsJsonArray();
 
+                        String cmdType;
+                        String titleType;
+                        if (type.equals("weekly")) {
+                            cmdType = "w";
+                            titleType = "Weekly";
+                        } else if (type.equals("monthly")) {
+                            cmdType = "m";
+                            titleType = "Monthly";
+                        } else {
+                            cmdType = "d";
+                            titleType = "Daily";
+                        }
+
                         if (gameName.equalsIgnoreCase("Classic Games") || gameName.equalsIgnoreCase("Legacy")) {
                             client.thePlayer.addChatMessage(new ChatComponentText("§m----------------------------------------"));
-                            client.thePlayer.addChatMessage(new ChatComponentText("§eWhich game's " + (weekly ? "weekly" : "daily") + " quests would you like to view?"));
-                            client.thePlayer.addChatMessage(new ChatComponentText(""));
-
-                            String cmdType = weekly ? "w" : "d";
+                            client.thePlayer.addChatMessage(new ChatComponentText("§eWhich game's " + type + " quests would you like to view?\n"));
 
                             String targetPlayer = (game.equalsIgnoreCase("current") || game.equalsIgnoreCase("legacy") || game.equalsIgnoreCase("classic")) ? ign : game;
 
@@ -611,13 +618,20 @@ public class QuestCommand extends CommandBase {
                             return;
                         }
 
+                        int totalGameQuests = questObject.has("totalGameQuests") ? questObject.get("totalGameQuests").getAsInt() : 0;
+
                         if (questList.size() == 0) {
-                            client.thePlayer.addChatMessage(new ChatComponentText("§c" + gameName + " doesn't have any quests!"));
+                            if (totalGameQuests > 0) {
+                                client.thePlayer.addChatMessage(new ChatComponentText("§c" + gameName + " doesn't have any " + type + " quests!"));
+                            } else {
+                                client.thePlayer.addChatMessage(new ChatComponentText("§c" + gameName + " doesn't have any quests!"));
+                            }
                             return;
                         }
 
-                        client.thePlayer.addChatMessage(new ChatComponentText("§m-------------------"));
-                        client.thePlayer.addChatMessage(new ChatComponentText("\n§l" + gameName + "\n§f" + (weekly ? "Weekly" : "Daily") + " Quests\n"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§m-------------------\n"));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§l" + gameName));
+                        client.thePlayer.addChatMessage(new ChatComponentText("§f" + titleType + " Quests\n"));
 
                         for (JsonElement quest : questList) {
                             JsonObject questObj = quest.getAsJsonObject();
@@ -627,15 +641,27 @@ public class QuestCommand extends CommandBase {
                             JsonArray objectives = statusObject.get("objectives").getAsJsonArray();
                             for (JsonElement objElem : objectives) {
                                 JsonObject obj = objElem.getAsJsonObject();
-                                String desc = obj.get("description").getAsString();
+                                String fullDesc = obj.get("description").getAsString();
                                 int progress = obj.get("progress").getAsInt();
                                 int goal = obj.get("goal").getAsInt();
 
-                                String color = (progress >= goal) ? "§a" : (progress == 0 ? "§c" : "§e");
+                                String color;
+                                if (progress >= goal) {
+                                    color = "§a";
+                                } else if (progress == 0) {
+                                    color = "§c";
+                                } else {
+                                    color = "§e";
+                                }
 
-                                String[] lines = desc.split("\n");
+                                String[] lines = fullDesc.split("\n");
                                 for (String line : lines) {
-                                    client.thePlayer.addChatMessage(new ChatComponentText("§f" + line.trim()));
+                                    String trimmed = line.trim();
+                                    if (trimmed.isEmpty()) {
+                                        client.thePlayer.addChatMessage(new ChatComponentText(" "));
+                                    } else {
+                                        client.thePlayer.addChatMessage(new ChatComponentText("§f" + trimmed));
+                                    }
                                 }
 
                                 client.thePlayer.addChatMessage(new ChatComponentText(color + progress + "/" + goal));
